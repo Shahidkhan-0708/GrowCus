@@ -1,9 +1,6 @@
-version: "3.8"
-
 services:
   mongodb:
     image: mongo
-    container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
@@ -11,13 +8,15 @@ services:
 
   backend:
     build: ./backend
-    container_name: backend
     ports:
       - "5000:5000"
-    depends_on:
-      - mongodb
     env_file:
       - ./backend/.env
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
 volumes:
-  mongo-data:
+  mongo-data: {}
