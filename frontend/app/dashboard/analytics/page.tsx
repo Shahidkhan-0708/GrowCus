@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect , useState} from "react";
 import { useUser } from "@/contexts/user-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,36 +16,23 @@ import {
   PieChart,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+const [data, setData] = useState(null);
+useEffect(()=>{
+  async function fetchData(){
+    try{
+      const res=await fetch(
+        '${process.env.NEXT_PUBLIC_API_URL}/api/analytics'
+      );
 
-// Demo analytics data
-const overviewStats = [
-  { label: "Total Students", value: "1,247", change: "+8%", trend: "up" },
-  { label: "Active Teachers", value: "32", change: "+3", trend: "up" },
-  { label: "Avg. Attendance", value: "82%", change: "+2%", trend: "up" },
-  { label: "Task Completion", value: "78%", change: "-1%", trend: "down" },
-];
+    const json=await res.json();
+    setData(json);
+  }catch(err){
+    console.log(err);
+  }
+}
 
-const batchPerformance = [
-  { batch: "JEE 2025 A", students: 45, avgScore: 78, attendance: 85, riskCount: 3 },
-  { batch: "JEE 2025 B", students: 42, avgScore: 72, attendance: 80, riskCount: 5 },
-  { batch: "NEET 2025 A", students: 50, avgScore: 75, attendance: 82, riskCount: 4 },
-  { batch: "NEET 2025 B", students: 48, avgScore: 68, attendance: 78, riskCount: 7 },
-  { batch: "JEE 2026", students: 38, avgScore: 70, attendance: 88, riskCount: 2 },
-];
-
-const subjectStats = [
-  { subject: "Physics", avgScore: 72, improvement: "+5%", topPerformer: "Priya S." },
-  { subject: "Chemistry", avgScore: 68, improvement: "+3%", topPerformer: "Rahul K." },
-  { subject: "Mathematics", avgScore: 75, improvement: "+7%", topPerformer: "Ananya P." },
-  { subject: "Biology", avgScore: 70, improvement: "+4%", topPerformer: "Vikram S." },
-];
-
-const monthlyTrend = [
-  { month: "Jan", students: 980, completion: 72 },
-  { month: "Feb", students: 1050, completion: 75 },
-  { month: "Mar", students: 1120, completion: 78 },
-  { month: "Apr", students: 1247, completion: 78 },
-];
+  fetchData();
+},[]);
 
 export default function AnalyticsPage() {
   const { isLoading, isAdmin } = useUser();
@@ -84,21 +71,21 @@ export default function AnalyticsPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {overviewStats.map((stat) => (
-          <Card key={stat.label}>
+        {data?.overview?.map((stat) => (
+          <Card key={stat?.label}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <p className="text-3xl font-bold text-foreground mt-1">
-                    {stat.value}
+                    {stat?.value}
                   </p>
                   <p
                     className={`text-xs mt-2 flex items-center gap-1 ${
-                      stat.trend === "up" ? "text-accent" : "text-destructive"
+                      stat?.trend === "up" ? "text-accent" : "text-destructive"
                     }`}
                   >
-                    {stat.trend === "up" ? (
+                    {stat?.trend === "up" ? (
                       <TrendingUp className="w-3 h-3" />
                     ) : (
                       <TrendingDown className="w-3 h-3" />
@@ -134,7 +121,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {batchPerformance.map((batch) => (
+              {batchPerformance?.map((batch) => (
                 <div
                   key={batch.batch}
                   className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"

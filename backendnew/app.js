@@ -32,6 +32,7 @@ const studentRoute=require("./routes/student")
 const notificationRoute=require("./routes/notification")
 const ariaRoute=require("./routes/aria")
 const riskRoute=require("./routes/risk")
+const anaRoute=require("./routes/analytics")
 
 app.use("/auth",authRoute);
 app.use("/user",verifyToken,userRoute);
@@ -40,6 +41,7 @@ app.use("/st",studentRoute);
 app.use("/noti",notificationRoute);
 app.use("/aria",ariaRoute,limit)
 app.use("/risk",riskRoute);
+app.use("/ana",anaRoute);
 const server=() => {
     db()
   app.listen(PORT,() => {
