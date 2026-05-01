@@ -39,6 +39,7 @@ export function AuthModal({
 }: AuthModalProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -49,6 +50,7 @@ export function AuthModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
       const json = await apiFetch<{
@@ -62,7 +64,7 @@ export function AuthModal({
       onClose();
       router.push("/dashboard");
     } catch (err) {
-      console.error("Auth error:", err);
+      setError(err instanceof Error ? err.message : "Authentication failed");
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +88,12 @@ export function AuthModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {error && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           {mode === "signup" && (
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
