@@ -1,42 +1,53 @@
 "use client";
 
-import { useEffect , useState} from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/user-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Users,
-  TrendingUp,
-  TrendingDown,
-  BookOpen,
-  Target,
-  Award,
-  BarChart3,
-  PieChart,
-} from "lucide-react";
+import { Users, BookOpen, Target, Award, PieChart } from "lucide-react";
 import { useRouter } from "next/navigation";
-const [data, setData] = useState(null);
-useEffect(()=>{
-  async function fetchData(){
-    try{
-      const res=await fetch(
-        '${process.env.NEXT_PUBLIC_API_URL}/api/analytics'
-      );
 
-    const json=await res.json();
-    setData(json);
-  }catch(err){
-    console.log(err);
-  }
-}
+// Match exactly what your backend sends
+type OverviewStat = {
+  label: string;
+  value: number;
+};
 
-  fetchData();
-},[]);
+type Subject = {
+  subject: string;
+  avgScore: number;
+};
+
+type AnalyticsData = {
+  overview: OverviewStat[];
+  subjects: Subject[];
+};
 
 export default function AnalyticsPage() {
   const { isLoading, isAdmin } = useUser();
   const router = useRouter();
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [fetchLoading, setFetchLoading] = useState(true); // ✅ separate loading for fetch
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/analytics`,
+          { credentials: "include" }
+        );
+        const json = await res.json();
+        console.log("API response:", json); // ✅ check this in browser console
+        setData(json);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setFetchLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
@@ -44,7 +55,7 @@ export default function AnalyticsPage() {
     }
   }, [isLoading, isAdmin, router]);
 
-  if (isLoading) {
+  if (isLoading || fetchLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -69,28 +80,16 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats — matches your backend overview array */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {data?.overview?.map((stat) => (
-          <Card key={stat?.label}>
+          <Card key={stat.label}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <p className="text-3xl font-bold text-foreground mt-1">
-                    {stat?.value}
-                  </p>
-                  <p
-                    className={`text-xs mt-2 flex items-center gap-1 ${
-                      stat?.trend === "up" ? "text-accent" : "text-destructive"
-                    }`}
-                  >
-                    {stat?.trend === "up" ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    {stat.change} from last month
+                    {stat.value}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-primary/10">
@@ -110,144 +109,36 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Batch Performance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              Batch Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {batchPerformance?.map((batch) => (
-                <div
-                  key={batch.batch}
-                  className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-medium text-foreground">{batch.batch}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {batch.students} students
-                      </p>
-                    </div>
-                    {batch.riskCount > 0 && (
-                      <Badge
-                        variant={batch.riskCount > 5 ? "destructive" : "secondary"}
-                      >
-                        {batch.riskCount} at risk
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Avg. Score</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full"
-                            style={{ width: `${batch.avgScore}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">{batch.avgScore}%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Attendance</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-accent rounded-full"
-                            style={{ width: `${batch.attendance}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">{batch.attendance}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Subject Performance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-primary" />
-              Subject Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {subjectStats.map((subject) => (
-                <div
-                  key={subject.subject}
-                  className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium text-foreground">{subject.subject}</p>
-                    <Badge variant="outline" className="text-accent border-accent">
-                      {subject.improvement}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Average Score</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {subject.avgScore}%
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Top Performer</p>
-                      <p className="text-sm font-medium text-primary">
-                        {subject.topPerformer}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Monthly Trend */}
+      {/* Subject Performance — matches your backend subjects array */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Monthly Growth Trend
+            <PieChart className="w-5 h-5 text-primary" />
+            Subject Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {monthlyTrend.map((month, idx) => (
+          <div className="space-y-4">
+            {data?.subjects?.map((subject) => (
               <div
-                key={month.month}
-                className={`p-4 rounded-lg ${
-                  idx === monthlyTrend.length - 1
-                    ? "bg-primary/10 border-2 border-primary/20"
-                    : "bg-muted/50"
-                }`}
+                key={subject.subject}
+                className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"
               >
-                <p className="text-sm font-medium text-muted-foreground">
-                  {month.month} 2026
-                </p>
-                <p className="text-2xl font-bold text-foreground mt-1">
-                  {month.students.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {month.completion}% task completion
-                </p>
-                {idx === monthlyTrend.length - 1 && (
-                  <Badge className="mt-2" variant="default">
-                    Current
-                  </Badge>
-                )}
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-medium text-foreground">{subject.subject}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Average Score</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${subject.avgScore}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium">{subject.avgScore}%</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

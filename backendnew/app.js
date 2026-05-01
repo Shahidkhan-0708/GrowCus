@@ -18,7 +18,8 @@ const PORT=process.env.PORT
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cors({
-      origin: "https://localhost:3000"
+      origin: "http://localhost:3000",
+      credentials: true,
 }))
 app.use(cookieparser())
 
@@ -33,6 +34,7 @@ const notificationRoute=require("./routes/notification")
 const ariaRoute=require("./routes/aria")
 const riskRoute=require("./routes/risk")
 const anaRoute=require("./routes/analytics")
+const dataRoute=require("./routes/data")
 
 app.use("/auth",authRoute);
 app.use("/user",verifyToken,userRoute);
@@ -40,9 +42,11 @@ app.use("/task",taskRoute);
 app.use("/st",studentRoute);
 app.use("/noti",notificationRoute);
 app.use("/aria",ariaRoute,limit)
+app.use("/api/aria",ariaRoute,limit)
 app.use("/risk",riskRoute);
 app.use("/ana",anaRoute);
 app.use("/api/analytics",anaRoute);
+app.use("/api",dataRoute);
 const server=() => {
     db()
   app.listen(PORT,() => {

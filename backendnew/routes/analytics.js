@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const Student = require("../models/Student");
 const User = require("../models/User");
 const Report = require("../models/Report");
 
 router.get("/", async (req, res) => {
   try {
     const [totalStudents, activeTeachers, subjects] = await Promise.all([
-      Student.countDocuments(),
+      User.countDocuments({ role: "student" }),
       User.countDocuments({ role: "teacher" }),
       Report.aggregate([
         {

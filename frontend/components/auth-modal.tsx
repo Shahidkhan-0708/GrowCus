@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Lock, Mail, User } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -48,20 +49,23 @@ export function AuthModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    localStorage.setItem(
-      "growcus_user",
-      JSON.stringify({
-        name: formData.name || "Demo User",
-        email: formData.email,
-        role: formData.role,
-      })
-    );
+    try {
+      const json = await apiFetch<{
+        user: { id: string; name: string; email: string; role: "student" | "teacher" | "admin" };
+      }>(mode === "login" ? "/auth/login" : "/auth/signup", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
 
-    setIsLoading(false);
-    onClose();
-    router.push("/dashboard");
+      localStorage.setItem("growcus_user", JSON.stringify(json.user));
+      onClose();
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Auth error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

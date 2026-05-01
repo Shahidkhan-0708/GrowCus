@@ -4,6 +4,10 @@ const TaskSchema=new mongoose.Schema({
         type:String,
         required:true,
     },
+    description:{
+        type:String,
+        required:false,
+    },
     subject:{
         type:String,
         required:true,
@@ -15,6 +19,11 @@ const TaskSchema=new mongoose.Schema({
     status:{
         type:String,
         required:true,
+    },
+    priority:{
+        type:String,
+        required:false,
+        default:"medium",
     },
     assignedTo:{
         type:mongoose.Schema.Types.ObjectId,

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 
 export type UserRole = "student" | "teacher" | "admin";
 
@@ -32,24 +33,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Load user from localStorage on mount
-    const stored = localStorage.getItem("growcus_user");
-    if (stored) {
+    async function loadUser() {
       try {
-        const userData = JSON.parse(stored);
-        setUser({
-          id: userData.id || "1",
-          name: userData.name || "Demo User",
-          email: userData.email || "demo@growcus.com",
-          role: userData.role || "teacher",
-          batch: userData.batch,
-          assignedBatches: userData.assignedBatches || ["JEE 2025", "NEET 2025"],
-        });
+        const currentUser = await apiFetch<User>("/api/me");
+        setUser(currentUser);
+        localStorage.setItem("growcus_user", JSON.stringify(currentUser));
       } catch {
-        console.error("Failed to parse user data");
+        setUser(null);
+        localStorage.removeItem("growcus_user");
+      } finally {
+        setIsLoading(false);
       }
     }
-    setIsLoading(false);
+
+    loadUser();
   }, []);
 
   const login = (userData: User) => {
