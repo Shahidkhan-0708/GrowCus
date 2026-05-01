@@ -9,6 +9,7 @@ try {
     console.log("db is connected")
 } catch (error) {
     console.error('db connection error:', error.message)
+    throw error;
 }
 }
 

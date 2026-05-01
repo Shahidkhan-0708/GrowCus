@@ -18,7 +18,7 @@ const PORT=process.env.PORT
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cors({
-      origin: "https://growcus-new-9.onrender.com",
+      origin:"https://growcus-new-12.onrender.com",
       credentials: true,
 }))
 app.use(cookieparser())
@@ -47,12 +47,17 @@ app.use("/risk",riskRoute);
 app.use("/ana",anaRoute);
 app.use("/api/analytics",anaRoute);
 app.use("/api",dataRoute);
-const server=() => {
-    db()
+const server=async () => {
+  try {
+    await db()
   app.listen(PORT,() => {
   console.log("ur listening to port: ",PORT)
 }
 )
+  } catch (error) {
+    console.error("server not started because database connection failed")
+    process.exit(1)
+  }
 }
 server()
 

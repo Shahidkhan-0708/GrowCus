@@ -2,9 +2,14 @@ const User=require("../models/User");
 const bcrypt=require("bcryptjs")
 const {setUser}=require("../services/auth")
 async function handleSignUp(req,res){
+try{
 const {name,email,password,role}=req.body;
 if(!name||!email||!password||!role){
     return res.status(400).json({message:"missing fields"})
+}
+const existingUser=await User.findOne({email});
+if(existingUser){
+    return res.status(409).json({message:"Email already registered"})
 }
 const hashedPassword=await bcrypt.hash(password,10);
 const user=await User.create({
@@ -28,8 +33,13 @@ res.status(201).json({
         subject:user.subject,
     }
 })
+}catch(err){
+    console.error("signup error:", err.message)
+    res.status(500).json({message:err.message})
+}
 }
 async function handleLogin(req,res){
+try{
 const {email,password}=req.body;
 if(!email||!password){
     return res.status(400).json({message:"missing fields"})
@@ -66,6 +76,10 @@ if(!isMatch){
     }
   })
 
+}catch(err){
+    console.error("login error:", err.message)
+    res.status(500).json({message:err.message})
+}
 }
 module.exports={
     handleSignUp,handleLogin
