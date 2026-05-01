@@ -18,7 +18,7 @@ const PORT=process.env.PORT
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cors({
-      origin:"https://growcus-new-12.onrender.com",
+      origin:"http://127.0.0.1:4040",
       credentials: true,
 }))
 app.use(cookieparser())
