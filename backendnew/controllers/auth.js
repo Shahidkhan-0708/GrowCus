@@ -18,8 +18,8 @@ name,email,password:hashedPassword,role
  const token=setUser(user);
  res.cookie("token",token,{
     httpOnly:true,
-    secure:false,
-    sameSite:"lax",
+    secure:process.env.NODE_ENV==="production",
+    sameSite:process.env.NODE_ENV==="production" ? "none" : "lax",
     maxAge:24*60*60*1000
  });
 res.status(201).json({
@@ -59,8 +59,8 @@ if(!isMatch){
  const token=setUser(user);
 
  res.cookie("token",token,{httpOnly:true,
-    secure:false,
-    sameSite:"lax",
+    secure:process.env.NODE_ENV==="production",
+    sameSite:process.env.NODE_ENV==="production" ? "none" : "lax",
     maxAge:24*60*60*1000
  });
  

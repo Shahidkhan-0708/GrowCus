@@ -14,11 +14,20 @@ const cookieparser=require("cookie-parser");
 const {verifyToken}=require("./middlewares/auth")
 
 const PORT=process.env.PORT
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cors({
-      origin:"https://growcus-new-17.onrender.com",
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+      },
       credentials: true,
 }))
 app.use(cookieparser())
