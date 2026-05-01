@@ -1,8 +1,8 @@
-require('dotenv').config()
 const express=require('express')
 const cors=require('cors');
 const app=express();
 const path=require("path")
+require('dotenv').config({ path: path.join(__dirname, ".env") })
 const {db}=require("./db/db")
 const rateLimit=require("express-rate-limit")
 const limit=rateLimit({
@@ -42,6 +42,7 @@ app.use("/noti",notificationRoute);
 app.use("/aria",ariaRoute,limit)
 app.use("/risk",riskRoute);
 app.use("/ana",anaRoute);
+app.use("/api/analytics",anaRoute);
 const server=() => {
     db()
   app.listen(PORT,() => {

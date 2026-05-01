@@ -7,15 +7,15 @@ services:
       - mongo-data:/data/db
 
   backend:
-    build: ./backend
+    build: ./backendnew
     ports:
       - "5000:5000"
     env_file:
-      - ./backend/.env
+      - ./backendnew/.env
     depends_on:
       - mongodb
     volumes:
-      - ./backend:/app
+      - ./backendnew:/app
       - /app/node_modules
 
 volumes:

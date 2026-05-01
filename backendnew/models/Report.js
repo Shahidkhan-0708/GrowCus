@@ -19,6 +19,19 @@ const ReportSchema=new mongoose.Schema({
     generatedAt:{
         required:true,
         type:String,
+    },
+    subject:{
+        required:false,
+        type:String,
+    },
+    score:{
+        required:false,
+        type:Number,
+    },
+    studentId:{
+        required:false,
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Student",
     }
 
 },{timestamps:true})

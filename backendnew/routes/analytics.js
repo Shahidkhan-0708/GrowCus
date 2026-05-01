@@ -1,22 +1,49 @@
 const express = require("express");
 const router = express.Router();
+const Student = require("../models/Student");
+const User = require("../models/User");
+const Report = require("../models/Report");
 
-// TEMP: hardcoded (replace later with Mongo)
 router.get("/", async (req, res) => {
   try {
+    const [totalStudents, activeTeachers, subjects] = await Promise.all([
+      Student.countDocuments(),
+      User.countDocuments({ role: "teacher" }),
+      Report.aggregate([
+        {
+          $match: {
+            subject: { $exists: true, $ne: null },
+            score: { $type: "number" },
+          },
+        },
+        {
+          $group: {
+            _id: "$subject",
+            avgScore: { $avg: "$score" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            subject: "$_id",
+            avgScore: { $round: ["$avgScore", 2] },
+          },
+        },
+        { $sort: { subject: 1 } },
+      ]),
+    ]);
+
     const data = {
       overview: [
-        { label: "Total Students", value: 120 },
-        { label: "Active Teachers", value: 10 },
+        { label: "Total Students", value: totalStudents },
+        { label: "Active Teachers", value: activeTeachers },
       ],
-      subjects: [
-        { subject: "Physics", avgScore: 70 },
-        { subject: "Math", avgScore: 80 },
-      ],
+      subjects,
     };
 
     res.json(data);
   } catch (err) {
+    console.error("Analytics fetch failed:", err);
     res.status(500).json({ error: err.message });
   }
 });
