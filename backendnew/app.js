@@ -14,20 +14,12 @@ const cookieparser=require("cookie-parser");
 const {verifyToken}=require("./middlewares/auth")
 
 const PORT=process.env.PORT
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cors({
-      origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-          return callback(null, true);
-        }
-        return callback(new Error(`CORS blocked for origin: ${origin}`));
-      },
+      origin:"http://localhost:3000",
       credentials: true,
 }))
 app.use(cookieparser())
@@ -45,6 +37,7 @@ const riskRoute=require("./routes/risk")
 const anaRoute=require("./routes/analytics")
 const dataRoute=require("./routes/data")
 
+app.use("/api",dataRoute);
 app.use("/auth",authRoute);
 app.use("/user",verifyToken,userRoute);
 app.use("/task",taskRoute);
@@ -55,7 +48,6 @@ app.use("/api/aria",ariaRoute,limit)
 app.use("/risk",riskRoute);
 app.use("/ana",anaRoute);
 app.use("/api/analytics",anaRoute);
-app.use("/api",dataRoute);
 const server=async () => {
   try {
     await db()
