@@ -1,22 +1,19 @@
 services:
   mongodb:
     image: mongo
-    ports:
-      - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    restart: always
 
   backend:
     build: ./backendnew
     ports:
       - "5000:5000"
-    env_file:
-      - ./backendnew/.env
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/your-db
     depends_on:
       - mongodb
-    volumes:
-      - ./backendnew:/app
-      - /app/node_modules
+    restart: always
 
 volumes:
   mongo-data: {}
