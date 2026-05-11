@@ -19,8 +19,8 @@ calculatedAt:{
   required:true,
   type:Date,
 }
-
-    
 },{timestamps:true})
+RiskSchema.index({ studentId: 1 });
+RiskSchema.index({ riskLevel: 1 });
 const riskSchema=mongoose.model("Risk",RiskSchema)
 module.exports=riskSchema

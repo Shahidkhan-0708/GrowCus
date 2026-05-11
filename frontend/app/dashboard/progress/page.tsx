@@ -14,6 +14,7 @@ interface ProgressData {
   topicsCompleted: number;
   xp: number;
   streak: number;
+  
   subjectProgress: Array<{
     subject: string;
     progress: number;

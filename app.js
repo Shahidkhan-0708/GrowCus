@@ -2,6 +2,9 @@ const express=require('express')
 const cors=require('cors');
 const app=express();
 const path=require("path")
+const {errorMiddleware}=require("./middlewares/error")
+
+const {addRedis}=require("./config/redis")
 require('dotenv').config({ path: path.join(__dirname, ".env") })
 const {db}=require("./db/db")
 const rateLimit=require("express-rate-limit")
@@ -35,7 +38,11 @@ const notificationRoute=require("./routes/notification")
 const ariaRoute=require("./routes/aria")
 const riskRoute=require("./routes/risk")
 const anaRoute=require("./routes/analytics")
-const dataRoute=require("./routes/data")
+const dataRoute=require("./routes/data");
+const scoreRoute=require("./routes/score")
+const statsRoute=require("./routes/stats")
+
+
 
 app.use("/api",dataRoute);
 app.use("/auth",authRoute);
@@ -47,7 +54,10 @@ app.use("/aria",ariaRoute,limit)
 app.use("/api/aria",ariaRoute,limit)
 app.use("/risk",riskRoute);
 app.use("/ana",anaRoute);
+app.use("/sc",scoreRoute);
+app.use("/sta",statsRoute);
 app.use("/api/analytics",anaRoute);
+app.use(errorMiddleware);
 const server=async () => {
   try {
     await db()

@@ -8,7 +8,8 @@ async function handleCalculatedRisk(req,res){
    const tasks=await taskSchema.find({assignedTo:studentId});
    const totalTasks=tasks.length
    const completedTasks=tasks.filter(t=>t.status==="completed").length
-   const completedRate=completedTasks/totalTasks
+   totalTasks===0
+   const completedRate=totalTasks===0? 1: completedTasks/totalTasks;
    const attendence=student.attendence;
    const marks=student.marks
    const calculatedAt=Date.now();
@@ -26,14 +27,15 @@ let level;
    if(riskLevel===4){ level="critical"}
    try{
    const Risk=await riskSchema.create({
-     level,studentId,riskLevel,riskFactors,calculatedAt
+     level,studentId,riskLevel,riskFactors,calculatedAt:new Date()
+   },{
+    upsert:true,
+    new:true
    })
-   res.status(200).json({Risk})
+   res.status(200).json(Risk)
 }catch(err){
   res.status(403).json({err:"risk is not calculated"})
 }
-
-
 }
 module.exports={
 handleCalculatedRisk

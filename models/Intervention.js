@@ -24,5 +24,7 @@ const InterventionSchema=new mongoose.Schema({
         type:String,
     },
 },{timestamps:true})
+InterventionSchema.index({ studentId: 1 });
+InterventionSchema.index({ createdAt: -1 });
 const interventionSchema=mongoose.model("Intervention",InterventionSchema);
 module.exports=interventionSchema;

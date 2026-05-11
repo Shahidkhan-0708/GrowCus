@@ -3,13 +3,21 @@ const {getUser}=require("../services/auth")
 function verifyToken(req,res,next){
     const token=req.cookies['token'];
     if(token==null){
-        return res.sendStatus(401);
+        return res.status(401).json({
+            message:"Unauthorized"
+        })
     }
-   const User= getUser(token);
-   if(!User) return res.status(403).json({message:"Unauthorized"})
    
-    req.user=User;
-    next()
+   try {
+      const user = getUser(token)
+      req.user = user
+      next()
+   } catch (err) {
+
+      return res.status(401).json({
+         message: "Invalid token"
+      })
+   }
     
 }
 module.exports={

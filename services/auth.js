@@ -5,6 +5,7 @@ function setUser(user){
 const payloads={
   userId:user._id,
   role:user.role,
+  instituteId:user.instituteId
 }
 try {
     return jwt.sign(payloads,secret);

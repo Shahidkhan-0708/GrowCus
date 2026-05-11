@@ -66,5 +66,7 @@ const UserSchema=new mongoose.Schema({
    }
 
 },{timestamps:true})
+UserSchema.index({ email: 1 }); // login fast
+UserSchema.index({ role: 1 });  // admin/staff filtering
 const userSchema=mongoose.model("User",UserSchema);
 module.exports=userSchema;

@@ -40,5 +40,7 @@ const TaskSchema=new mongoose.Schema({
         required:true,
     }
 },{timestamps:true});
+TaskSchema.index({ studentId: 1 });
+TaskSchema.index({ status: 1 });
 const taskSchema=mongoose.model("task",TaskSchema);
 module.exports=taskSchema;

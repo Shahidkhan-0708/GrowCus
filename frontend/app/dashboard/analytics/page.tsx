@@ -22,6 +22,7 @@ type Subject = {
 type AnalyticsData = {
   overview: OverviewStat[];
   subjects: Subject[];
+
 };
 
 export default function AnalyticsPage() {
