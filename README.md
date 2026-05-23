@@ -6,6 +6,13 @@ This project was built as a complete web application with a separate backend API
 
 ---
 
+## 🌐 Live Demo
+
+**Check out the live production build here:**
+👉 [http://u11s85ee483wx887w4i5cx38.18.209.61.240.sslip.io](http://u11s85ee483wx887w4i5cx38.18.209.61.240.sslip.io)
+
+---
+
 ## 🎯 Why I Built This
 
 Growcus was created to solve a real education-management problem. In many coaching institutes, student performance is tracked manually or across disconnected tools. Teachers may know that a student is struggling, but they often do not have one place to see attendance, marks, pending tasks, progress, and risk indicators together.
