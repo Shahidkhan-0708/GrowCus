@@ -71,11 +71,12 @@ const server=async () => {
   console.log("db connected")
 
   } catch (error) {
-    console.error("DB failed, but starting server anyway")
+    console.error("DB Connection Error:", error.message)
+    console.error("Container will crash now. Check MongoDB Atlas Network Access.")
     process.exit(1)
   }
-   app.listen(PORT, () => {
-    console.log("Server running on port", PORT)
+   app.listen(PORT, "0.0.0.0", () => {
+    console.log("Server running on port", PORT, "bound to 0.0.0.0")
   })
 }
 
