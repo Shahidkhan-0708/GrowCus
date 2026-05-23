@@ -1,13 +1,14 @@
+const path=require("path")
+require('dotenv').config({ path: path.join(__dirname, ".env") })
+
 const express=require('express')
 const cors=require('cors');
 const app=express();
-const path=require("path")
 const {errorMiddleware}=require("./middlewares/error")
 const logger=require("./middlewares/logger")
 const AppError=require("./jobs/apiError")
 
 const {addRedis}=require("./config/redis")
-require('dotenv').config({ path: path.join(__dirname, ".env") })
 const {db}=require("./db/db")
 const rateLimit=require("express-rate-limit")
 const limit=rateLimit({
