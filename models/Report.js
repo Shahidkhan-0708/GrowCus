@@ -15,7 +15,7 @@ const ReportSchema=new mongoose.Schema({
     },
     data:{
         required:true,
-        type:Date,
+        type:mongoose.Schema.Types.Mixed,
     },
     generatedAt:{
         required:true,

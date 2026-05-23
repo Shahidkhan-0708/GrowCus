@@ -1,154 +1,143 @@
-const TaskSchema=require("../models/Tasks");
-const User=require("../models/User")
-const taskStats=require("../models/taskStat")
-async function handleCreateTask(req,res){
-    const {title,subject,xp,status,assignedTo,deadline}=req.body;
-    const studentId=assignedTo
-if(!title||!subject||!xp||!status||!assignedTo||!deadline){
-    return res.status(403).json({error:"all fields must be filled"});
+const Task = require("../models/Tasks")
+const User = require("../models/User")
+const TaskStat = require("../models/taskStat")
+const { asyncHandler, AppError, sendSuccess } = require("../utils/api")
+
+function canManageTasks(user) {
+   return user && ["teacher", "admin"].includes(user.role)
 }
-if(req.user.role==="teacher"||req.user.role==="admin"){
-try{
-    const Usertask=await TaskSchema.create({
-    title,subject,xp,status,assignedTo,assignedBy:req.user.userId,deadline
+
+function statQueryFor(req, studentId) {
+   return { instituteId: req.user.instituteId || String(studentId) }
+}
+
+async function recalculateTaskStats(query) {
+   const stat = await TaskStat.findOne(query)
+   if (!stat) return null
+
+   const completedTasks = Math.max(Number(stat.completedTasks || 0), 0)
+   const totalTasks = Math.max(Number(stat.totalTasks || 0), 0)
+   const completeRate = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100
+
+   return TaskStat.findOneAndUpdate(
+      query,
+      { completedTasks, totalTasks, completeRate, updatedAt: new Date() },
+      { upsert: true, new: true }
+   )
+}
+
+const handleCreateTask = asyncHandler(async (req, res) => {
+   if (!canManageTasks(req.user)) {
+      throw new AppError("Students cannot add tasks", 403)
+   }
+
+   const { title, subject, xp, status, assignedTo, deadline } = req.body
+   const task = await Task.create({
+      title,
+      subject,
+      xp,
+      status,
+      assignedTo,
+      assignedBy: req.user.userId,
+      deadline
+   })
+
+   const query = statQueryFor(req, assignedTo)
+   await TaskStat.findOneAndUpdate(
+      query,
+      {
+         $inc: { totalTasks: 1 },
+         $setOnInsert: { completedTasks: 0, completeRate: 0 },
+         updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+   )
+   await recalculateTaskStats(query)
+
+   return sendSuccess(res, { task }, "Task added", 201)
 })
-   const currStat= await taskStats.findOneAndUpdate(
-   studentId,
-   {
-      $inc: {
-         totalTasks: 1
-      }},{
-        upsert:true,new:true
-      }
-)
-const completedTasks=currStat.completedTasks;
-const totalTasks=currStat.totalTasks
-const completedPercent=totalTasks===0?0:(completedTasks/totalTasks)*100
-await taskStats.updateOne(studentId,{completeRate:completedPercent},{upsert:true,new:true})
 
-  res.status(200).json({mess:"task is successfully added"})
-}catch(err){
-    res.status(400).json({err:"task is not created"})
-}
-}
-else{
-    res.status(403).json({err:"student cant add task"})
-}
-}
-async function handleGetTasks(req,res){
-    if(req.user.role==="teacher"||req.user.role==="admin"){
-        try {
-    const teacherTasks=await TaskSchema.find({assignedBy:req.user.userId}).sort({created:-1})
-       res.status(200).json({teacherTasks})
-    } catch (error) {
-        res.status(403).json({err:"tasks are not fetched"})
-    }
-}
-else{
-   try{
-    const studentTasks=await TaskSchema.find({assignedTo:req.user.userId}).sort({created:-1});
-    res.status(200).json({studentTasks})
-   }catch(err){  
-      res.status(400).json({err:"student Tasks failed"})
+const handleGetTasks = asyncHandler(async (req, res) => {
+   const query = canManageTasks(req.user)
+      ? { assignedBy: req.user.userId }
+      : { assignedTo: req.user.userId }
+
+   const tasks = await Task.find(query).sort({ createdAt: -1 })
+
+   return sendSuccess(res, { tasks }, "Tasks fetched")
+})
+
+const handleCompleteTask = asyncHandler(async (req, res) => {
+   const task = await Task.findById(req.params.id)
+
+   if (!task) {
+      throw new AppError("Task not found", 404)
    }
-}
-}
-async function handleCompleteTask(req,res){
-    
-    try {
-       const id=req.params.id;
-       const instituteId=req.user.instituteId
-      
-  const task= await TaskSchema.findById(id);
 
-if(task.status === "completed") {
-   return res.status(400).json({
-      err: "Task already completed"
-   });
-}
-       const updateTask =
-   await TaskSchema.findOneAndUpdate(
-
-      {
-         _id: id,
-         assignedTo: req.user.userId
-      },
-
-      {
-         status: "completed"
-      },
-
-      {
-         new: true
-      }
-   );
-   if(!updateTask) {
-   return res.status(404).json({
-      err: "Task not found"
-   });
-}
-       const studentId=updateTask.assignedTo
-     const currStat=await taskStats.findOneAndUpdate(
-   studentId,
-   {
-      $inc: {
-         completedTasks: 1
-      }},{upsert:true,new:true}
-   
-)
-const completedTasks=currStat.completedTasks;
-const totalTasks=currStat.totalTasks
-const completedPercent=totalTasks===0?0:(completedTasks/totalTasks)*100
-await taskStats.updateOne(studentId,{completeRate:completedPercent},{upsert:true,new:true})
-       
-const xp=updateTask.xp
-       const u1= await User.findByIdAndUpdate(req.user.userId,{
-         $inc:{
-            xp:updateTask.xp
-         }},{new:true}
-       )
-     res.status(200).json({updateTask})
-   } catch (error) {
-    console.log(error)
-    res.status(400).json({err:"Update is not possible"})
+   if (task.status === "completed") {
+      throw new AppError("Task already completed", 400)
    }
-}
-async function handleDeleteTask(req,res){
-    if(req.user.role==="teacher"||req.user.role==="admin"){
-    try {
-        const id=req.params.id;
-        const instituteId=req.user.instituteId
-       const deletingTask= await TaskSchema.findByIdAndDelete(id)
-        const studentId=deletingTask.assignedTo
-        if(deletingTask.status==="completed"){
-       const currStat= await taskStats.findOneAndUpdate(studentId,{$inc:{totalTasks:-1,completedTasks:-1}},{
-            upsert:true,new:true
-        })
-        const completedTasks=currStat.completedTasks;
-const totalTasks=currStat.totalTasks
-const completedPercent=totalTasks===0?0:(completedTasks/totalTasks)*100
-await taskStats.updateOne(studentId,{completeRate:completedPercent},{upsert:true, new: true})
-    }
-    else{
-        const currStat= await taskStats.findByIdAndUpdate(studentId,{$inc:{totalTasks:-1}},{
-            upsert:true,new:true
-        })
-         const completedTasks=currStat.completedTasks;
-const totalTasks=currStat.totalTasks
-const completedPercent=totalTasks===0?0:(completedTasks/totalTasks)*100
-await taskStats.updateOne(studentId,{completeRate:completedPercent},{upsert:true,new:true})
 
-    }
-}
-     catch (error) {
-        console.log(error)
-        res.status(400).json({err:"task is not deleted"})
-    }
-}
-else{
-    res.status(403).json({err:"student can not delete the task"})
-}
-}
-module.exports={
-    handleCreateTask,handleGetTasks,handleCompleteTask,handleDeleteTask
+   const updatedTask = await Task.findOneAndUpdate(
+      { _id: req.params.id, assignedTo: req.user.userId },
+      { status: "completed" },
+      { new: true }
+   )
+
+   if (!updatedTask) {
+      throw new AppError("Task not found", 404)
+   }
+
+   const query = statQueryFor(req, updatedTask.assignedTo)
+   await TaskStat.findOneAndUpdate(
+      query,
+      {
+         $inc: { completedTasks: 1 },
+         $setOnInsert: { totalTasks: 0, completeRate: 0 },
+         updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+   )
+   await recalculateTaskStats(query)
+
+   await User.findByIdAndUpdate(req.user.userId, {
+      $inc: { xp: updatedTask.xp }
+   })
+
+   return sendSuccess(res, { task: updatedTask }, "Task completed")
+})
+
+const handleDeleteTask = asyncHandler(async (req, res) => {
+   if (!canManageTasks(req.user)) {
+      throw new AppError("Students cannot delete tasks", 403)
+   }
+
+   const task = await Task.findByIdAndDelete(req.params.id)
+
+   if (!task) {
+      throw new AppError("Task not found", 404)
+   }
+
+   const query = statQueryFor(req, task.assignedTo)
+   await TaskStat.findOneAndUpdate(
+      query,
+      {
+         $inc: {
+            totalTasks: -1,
+            completedTasks: task.status === "completed" ? -1 : 0
+         },
+         updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+   )
+   await recalculateTaskStats(query)
+
+   return sendSuccess(res, { task }, "Task deleted")
+})
+
+module.exports = {
+   handleCreateTask,
+   handleGetTasks,
+   handleCompleteTask,
+   handleDeleteTask
 }

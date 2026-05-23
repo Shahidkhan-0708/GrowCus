@@ -1,11 +1,15 @@
+const AppError=require("../jobs/apiError")
+
 function allowRoles(...roles){
 
    return (req, res, next) => {
 
+      if(!req.user){
+         return next(new AppError("Unauthorized", 401))
+      }
+
       if(!roles.includes(req.user.role)){
-         return res.status(403).json({
-            message: "Forbidden"
-         })
+         return next(new AppError("Forbidden", 403))
       }
 
       next()

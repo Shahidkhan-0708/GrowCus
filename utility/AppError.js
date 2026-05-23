@@ -1,13 +1,1 @@
-class AppError extends Error {
-
-   constructor(message, statusCode){
-
-      super(message)
-
-      this.statusCode = statusCode
-
-      this.success = false
-   }
-}
-
-module.exports = AppError
+module.exports = require("../jobs/apiError")

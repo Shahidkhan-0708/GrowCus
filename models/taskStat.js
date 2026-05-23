@@ -22,3 +22,4 @@ const taskStatSchema=new mongoose.Schema({
     }
 },{timestamps:true});
 const taskStats=mongoose.model("taskStat",taskStatSchema)
+module.exports=taskStats

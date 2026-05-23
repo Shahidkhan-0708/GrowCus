@@ -1,7 +1,8 @@
 const express=require("express");
 const router=express.Router();
 const {handleAriaChat}=require("../controllers/aria")
-router.post("/message-aria",handleAriaChat);
+const {requireFields}=require("../middlewares/validate")
+router.post("/message-aria",requireFields(["message"]),handleAriaChat);
 
 module.exports=router;
 

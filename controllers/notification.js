@@ -1,52 +1,49 @@
-const notificationSchema=require("../models/Notification")
+const Notification = require("../models/Notification")
+const { asyncHandler, AppError, sendSuccess } = require("../utils/api")
 
-async function handleCreateNotification(req,res){
-const {message,type,isRead,studentId}=req.body;
+const handleCreateNotification = asyncHandler(async (req, res) => {
+   const { message, type, studentId } = req.body
 
-try{
-const notify=await notificationSchema.create({
-    message,type,studentId,userId:req.user.userId
+   const notification = await Notification.create({
+      message,
+      type,
+      studentId,
+      userId: req.user.userId
+   })
+
+   return sendSuccess(res, { notification }, "Notification created", 201)
 })
-res.status(200).json({notify});
-}catch(err){
-    console.log(err)
-res.status(400).json({err:"notification is not created"})
-}
 
+const handleGetNotification = asyncHandler(async (req, res) => {
+   const query = req.user.role === "student"
+      ? { studentId: req.user.userId }
+      : { userId: req.user.userId }
 
-}
-async function handleGetNotification(req,res){
-    if(req.user.role==="student"){
-        try{
-    const Snotifications=await notificationSchema.find({studentId:req.user.userId}).sort({createdAt:-1})
-    res.status(200).json({Snotifications},{mess:"students received notification"});
-        }catch(err){
-   res.status(400).json({err:"notifications are not getting for students"})
-        }
-}
-else{
-    try{
-    const Tnotifications=await notificationSchema.find({userId:req.user.userId}).sort({createdAt:-1})
-    res.status(200).json({Tnotifications},{mess:"teacher sent notifications"})
-    }catch(err){
-        res.status(401).json({err:"notifications are not getting for teachers"})
-    }
-}
-}
-async function handlemarkAsRead(req,res){
-    if(req.user.role==="student"){
-        const sId=req.params.id
-        try{
-       const updateRead=await notificationSchema.findByIdAndUpdate(sId,{isRead:true},{returnDocument:"after"})
-       res.status(200).json({updateRead});
-        }catch(err){
-     res.status(403).json({err:"notification not Read"})
-        }
-    }
-    else{
-        res.status(400).json({mess:"Access denied"})
-    }
-}
-module.exports={
-    handleCreateNotification,handleGetNotification,handlemarkAsRead
+   const notifications = await Notification.find(query).sort({ createdAt: -1 })
+
+   return sendSuccess(res, { notifications }, "Notifications fetched")
+})
+
+const handlemarkAsRead = asyncHandler(async (req, res) => {
+   if (req.user.role !== "student") {
+      throw new AppError("Only students can mark notifications as read", 403)
+   }
+
+   const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, studentId: req.user.userId },
+      { isRead: true },
+      { returnDocument: "after" }
+   )
+
+   if (!notification) {
+      throw new AppError("Notification not found", 404)
+   }
+
+   return sendSuccess(res, { notification }, "Notification marked as read")
+})
+
+module.exports = {
+   handleCreateNotification,
+   handleGetNotification,
+   handlemarkAsRead
 }

@@ -1,57 +1,63 @@
-const { config } = require("dotenv")
-const studentUser=require("../models/User")
-const { truncate } = require("fs")
+const User = require("../models/User")
+const { asyncHandler, AppError, sendSuccess } = require("../utils/api")
 
-async function handleGetStudents(req,res){
-    if(req.user.role==="teacher"||req.user.role==="admin"){
-try{
-    const student=await studentUser.find({assignedTeacher:req.user.userId})
-    res.status(200).json(student)
-    }catch(err){
-       console.log(err)
-    res.status(403).json({err:"students are not found"})
-    }
-}
-else{
-    res.status(403).json({err:"students cant access"})
+function canManageStudents(user) {
+   return user && ["teacher", "admin"].includes(user.role)
 }
 
-}
-async function handleGetStudentById(req,res){
-const id=req.params.id;
-if(req.user.role==="teacher"||req.user.role==="admin"){
-try{
-const idStudent=await studentUser.findById(id)
-if(!idStudent||idStudent.role!=="student"){
-    return res.status(403).json({err:"student not found"})
-}
-res.status(200).json(idStudent);
-}catch(err){
-res.status(403).json({err:"Invalid Id ,no student Found"})
-}
-}
-else{
-    res.status(403).json({err:"students cant access"})
-}
-}
-async function handleUpdateStudent(req,res){
-    if(req.user.role==="teacher"||req.user.role==="admin"){
-    try{
- const id=req.params.id;
- const attendence=req.body.attendence;
- const marks=req.body.marks;
- const isActive=req.body.isActive;
- const upStudent=await studentUser.findByIdAndUpdate(id,{attendence,marks,isActive,assignedTeacher:req.user.userId},{returnDocument:"after",projection:{password:0}})
-   res.status(200).json(upStudent)
-    }catch(err){
-   res.status(403).json({err:"student not updated"})
-    }
-}
-else{
-    res.status(403).json({err:"students cant access"})
-}
-}
+const handleGetStudents = asyncHandler(async (req, res) => {
+   if (!canManageStudents(req.user)) {
+      throw new AppError("Students cannot access this resource", 403)
+   }
 
-module.exports={
-    handleGetStudents,handleGetStudentById,handleUpdateStudent
+   const query = req.user.role === "teacher" ? { assignedTeacher: req.user.userId } : { role: "student" }
+   const students = await User.find(query).select("-password")
+
+   return sendSuccess(res, { students }, "Students fetched")
+})
+
+const handleGetStudentById = asyncHandler(async (req, res) => {
+   if (!canManageStudents(req.user)) {
+      throw new AppError("Students cannot access this resource", 403)
+   }
+
+   const student = await User.findById(req.params.id).select("-password")
+
+   if (!student || student.role !== "student") {
+      throw new AppError("Student not found", 404)
+   }
+
+   return sendSuccess(res, { student }, "Student fetched")
+})
+
+const handleUpdateStudent = asyncHandler(async (req, res) => {
+   if (!canManageStudents(req.user)) {
+      throw new AppError("Students cannot access this resource", 403)
+   }
+
+   const { attendence, marks, isActive } = req.body
+   const update = {
+      ...(attendence !== undefined ? { attendence } : {}),
+      ...(marks !== undefined ? { marks } : {}),
+      ...(isActive !== undefined ? { isActive } : {}),
+      ...(req.user.role === "teacher" ? { assignedTeacher: req.user.userId } : {})
+   }
+
+   const student = await User.findOneAndUpdate(
+      { _id: req.params.id, role: "student" },
+      update,
+      { returnDocument: "after", projection: { password: 0 } }
+   )
+
+   if (!student) {
+      throw new AppError("Student not found", 404)
+   }
+
+   return sendSuccess(res, { student }, "Student updated")
+})
+
+module.exports = {
+   handleGetStudents,
+   handleGetStudentById,
+   handleUpdateStudent
 }

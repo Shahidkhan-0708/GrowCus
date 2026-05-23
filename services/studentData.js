@@ -46,7 +46,6 @@ async function getFormattedStudents(query = {}) {
       stat.total ? Math.round((stat.completed / stat.total) * 100) : 0,
     ])
   );
-
   return students.map((student) => {
     const taskCompletion = statsByStudent.get(String(student._id)) ?? 0;
     const risk = riskFromStudent(student, taskCompletion);
@@ -56,6 +55,7 @@ async function getFormattedStudents(query = {}) {
       name: student.name,
       email: student.email,
       batch: student.batch || "Unassigned",
+      subject: student.subject || "Unassigned",
       phone: student.parentPhone ? String(student.parentPhone) : "",
       attendance: Number(student.attendence ?? 0),
       marks: Number(student.marks ?? 0),

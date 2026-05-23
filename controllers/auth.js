@@ -1,18 +1,20 @@
 const User=require("../models/User");
 const bcrypt=require("bcryptjs")
-const AppError=require("utiliy/AppError")
+const asyncHandler=require("../jobs/asyncHandler")
+const AppError=require("../jobs/apiError")
 const DashboardStats=require("../models/DashboardStat")
 const {setUser}=require("../services/auth")
-const handleSignup = asyncHandler(async (req, res) => {
-try{
+const {sendSuccess}=require("../jobs/apiResponse")
+
+const handleSignUp = asyncHandler(async (req, res) => {
 const {name,email,password,role,instituteId}=req.body;
 if(!name||!email||!password||!role||!instituteId){
-    throw new AppError("missing fields", 409)
+    throw new AppError("Missing fields", 400)
 }
 
 const existingUser=await User.findOne({email});
 if(existingUser){
-    return res.status(409).json({message:"Email already registered"})
+    throw new AppError("Email already registered", 409)
 }
 const hashedPassword=await bcrypt.hash(password,10);
 const user=await User.create({
@@ -46,8 +48,7 @@ if(role==="teacher"){
     maxAge:24*60*60*1000
  });
 
-res.status(201).json({
-    message: "User registered successfully",
+return sendSuccess(res, {
     user:{
         id:user._id,
         name:user.name,
@@ -57,18 +58,13 @@ res.status(201).json({
         batch:user.batch,
         subject:user.subject,
     }
-})
-}catch(err){
-    console.error("signup error:", err.message)
-    res.status(500).json({message:err.message})
-}
+}, "User registered successfully", 201)
 })
 
     const handleLogin = asyncHandler(async (req, res) => {
-try{
 const {email,password}=req.body;
 if(!email||!password){
-    return res.status(400).json({message:"missing fields"})
+    throw new AppError("Missing fields", 400)
 }
 const user=await User.findOne({email});
 if(!user){
@@ -77,16 +73,34 @@ if(!user){
 }
 const isMatch=await bcrypt.compare(password,user.password)
 if(!isMatch){
-    return res.status(400).json({message:"Invalid credentials"})
+    throw new AppError("Invalid credentials", 401)
 }
+  // Attendance Automation
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of today
+
+  let hasLoggedToday = false;
+  if (user.lastLoginDate) {
+      const lastLogin = new Date(user.lastLoginDate);
+      lastLogin.setHours(0, 0, 0, 0);
+      if (lastLogin.getTime() === today.getTime()) {
+          hasLoggedToday = true;
+      }
+  }
+
+  if (!hasLoggedToday) {
+      user.attendence = (user.attendence || 0) + 1;
+      user.lastLoginDate = new Date();
+      await user.save();
+  }
+
  const token=setUser(user);
  res.cookie("token",token,{httpOnly:true,
     secure:process.env.NODE_ENV==="production",
     sameSite:process.env.NODE_ENV==="production" ? "none" : "lax",
     maxAge:24*60*60*1000
  });
-  res.status(200).json({
-    message:"Successfully Login ",
+     return sendSuccess(res, {
     user:{
         id:user._id,
         name:user.name,
@@ -95,12 +109,8 @@ if(!isMatch){
         batch:user.batch,
         subject:user.subject,
     }
-  })
+  }, "Successfully Login", 200)
 
-}catch(err){
-    console.error("login error:", err.message)
-    res.status(500).json({message:err.message})
-}
 })
 module.exports={
     handleSignUp,handleLogin

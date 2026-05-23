@@ -1,27 +1,9 @@
-const express = require("express");
-const Report = require("../models/Report");
+const express = require("express")
+const { createReport } = require("../controllers/report")
+const { requireFields, validateObjectId } = require("../middlewares/validate")
 
-const router = express.Router();
+const router = express.Router()
 
-router.post("/report", async (req, res) => {
-  try {
-    const { instituteId, generatedBy, types, data, generatedAt } = req.body;
-    if (!instituteId || !generatedBy || !types || !data) {
-      return res.status(400).json({ error: "instituteId, generatedBy, types, and data are required" });
-    }
+router.post("/report", requireFields(["instituteId", "generatedBy", "types", "data"]), validateObjectId("instituteId", "body"), createReport)
 
-    const report = await Report.create({
-      instituteId,
-      generatedBy,
-      types,
-      data,
-      generatedAt: generatedAt || new Date(),
-    });
-
-    res.status(201).json({ report });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-module.exports = router;
+module.exports = router

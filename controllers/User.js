@@ -1,23 +1,24 @@
-const User=require("../models/User")
-async function handleGetDashBoard(req,res){
+const User = require("../models/User")
+const Risk = require("../models/Riskscore")
+const { asyncHandler, AppError, sendSuccess } = require("../utils/api")
 
-const RiskSchema=require("../models/Riskscore")
+const handleGetDashBoard = asyncHandler(async (req, res) => {
+   const user = await User.findById(req.user.userId).select("-password")
 
-if(req.user.role==="student"){
-    try{
-        const studentId=req.user.userId;
-const risks=await RiskSchema.findById({studentId})
-const risk=risks.level
-const user=await User.findByIdAndUpdate(studentId,{riskScore:risk},{returnDocument:"after"}).select("-password")
-   res.status(200).json({user});
-    }catch(err){
-        console.log(err)
-   res.status(400).json({err:"user not present"})
-    }
-}
-if(!user){
-    return res.status(400).json({err:"user is not Logged In"})
-}
-return res.status(200).json({user})
-}
-module.exports={handleGetDashBoard};
+   if (!user) {
+      throw new AppError("User is not logged in", 401)
+   }
+
+   if (req.user.role === "student") {
+      const risk = await Risk.findOne({ studentId: req.user.userId }).sort({ createdAt: -1 })
+
+      if (risk) {
+         user.riskScore = risk.level
+         await user.save()
+      }
+   }
+
+   return sendSuccess(res, { user }, "Dashboard user fetched")
+})
+
+module.exports = { handleGetDashBoard }

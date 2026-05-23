@@ -1,42 +1,53 @@
-const { config } = require("dotenv")
-const taskSchema=require("../models/Tasks")
-const userSchema=require("../models/User")
-const riskSchema=require("../models/Riskscore")
-async function handleCalculatedRisk(req,res){
-   const studentId=req.params.id
-   const student=await userSchema.findById(studentId);
-   const tasks=await taskSchema.find({assignedTo:studentId});
-   const totalTasks=tasks.length
-   const completedTasks=tasks.filter(t=>t.status==="completed").length
-   totalTasks===0
-   const completedRate=totalTasks===0? 1: completedTasks/totalTasks;
-   const attendence=student.attendence;
-   const marks=student.marks
-   const calculatedAt=Date.now();
-   const riskFactors=[];
-   if(completedRate<0.5) riskFactors.push("low task completion")
-   if(attendence<75) riskFactors.push("low attendence");
-   if(marks<40) riskFactors.push("low marks")
-      const riskLevel=riskFactors.length
+const Task = require("../models/Tasks")
+const User = require("../models/User")
+const Risk = require("../models/Riskscore")
+const { asyncHandler, AppError, sendSuccess } = require("../utils/api")
 
+const RISK_LEVELS = {
+   0: "low",
+   1: "low",
+   2: "medium",
+   3: "high"
+}
 
-let level;
-   if(riskLevel==1){ level="low"}
-   if(riskLevel===2){ level="middle"}
-   if(riskLevel===3){ level="high"}
-   if(riskLevel===4){ level="critical"}
-   try{
-   const Risk=await riskSchema.create({
-     level,studentId,riskLevel,riskFactors,calculatedAt:new Date()
-   },{
-    upsert:true,
-    new:true
-   })
-   res.status(200).json(Risk)
-}catch(err){
-  res.status(403).json({err:"risk is not calculated"})
-}
-}
-module.exports={
-handleCalculatedRisk
+const handleCalculatedRisk = asyncHandler(async (req, res) => {
+   const studentId = req.params.id
+   const student = await User.findById(studentId)
+
+   if (!student || student.role !== "student") {
+      throw new AppError("Student not found", 404)
+   }
+
+   const tasks = await Task.find({ assignedTo: studentId })
+   const totalTasks = tasks.length
+   const completedTasks = tasks.filter((task) => task.status === "completed").length
+   const completedRate = totalTasks === 0 ? 1 : completedTasks / totalTasks
+   const attendance = Number(student.attendence ?? 0)
+   const marks = Number(student.marks ?? 0)
+   const riskFactors = []
+
+   if (completedRate < 0.5) riskFactors.push("low task completion")
+   if (attendance < 75) riskFactors.push("low attendance")
+   if (marks < 40) riskFactors.push("low marks")
+
+   const riskLevel = riskFactors.length
+   const level = RISK_LEVELS[riskLevel] || "critical"
+
+   const risk = await Risk.findOneAndUpdate(
+      { studentId },
+      {
+         level,
+         studentId,
+         riskLevel,
+         riskFactors,
+         calculatedAt: new Date()
+      },
+      { upsert: true, new: true }
+   )
+
+   return sendSuccess(res, { risk }, "Risk calculated")
+})
+
+module.exports = {
+   handleCalculatedRisk
 }

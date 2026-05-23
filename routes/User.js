@@ -1,7 +1,8 @@
 const express=require("express");
 const router=express.Router();
 const {handleGetDashBoard}=require("../controllers/User")
-router.get("/dash-board",handleGetDashBoard);
+const {requireAuth}=require("../middlewares/auth")
+router.get("/dash-board",requireAuth,handleGetDashBoard);
 
 
 module.exports= router;
