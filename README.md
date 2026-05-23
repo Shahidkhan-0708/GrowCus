@@ -30,13 +30,12 @@ Growcus brings these ideas into one platform:
 
 ### Backend
 * **Node.js** & **Express.js**
-* **MongoDB** & **Mongoose** (ODM)
+* **MongoDB Atlas** & **Mongoose** (ODM)
 * **JWT Authentication** (Secure HTTP-Only Cookie-based auth flow)
 * **bcrypt** for secure password hashing
 * **Redis Caching** for caching dashboard statistics
 * **Groq SDK** for Aria AI Assistant integration
 * **Rate Limiting** for API security
-* **Docker** for containerized deployments
 
 ---
 
@@ -78,8 +77,6 @@ Growcus brings these ideas into one platform:
       ┌────────────────┐     ┌────────────────┐
       │  Redis Cache   │     │  Rate Limiter  │
       └────────────────┘     └────────────────┘
-
-                    Containerized Using Docker
 ```
 
 ---
@@ -149,7 +146,7 @@ Aria helps students with motivation, academic guidance, and subject-level assist
 * **AI-powered Assistant:** Chat integration with Groq to guide students.
 * **Redis Caching:** Caching for expensive MongoDB aggregation queries.
 * **API Rate Limiting:** Prevents abuse of sensitive endpoints.
-* **Dockerized Deployment:** Complete Docker and Docker Compose setup.
+* **MongoDB Atlas:** Cloud-hosted database with MongoDB Atlas for production-ready persistence.
 
 ---
 
@@ -262,20 +259,6 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 
 ---
 
-## 🐳 Docker Support
-
-Growcus supports containerized deployment using Docker.
-
-```bash
-# Build the Docker image
-docker build -t growcus .
-
-# Run the container
-docker run -p 5000:5000 growcus
-```
-
----
-
 ## 🧪 Running Locally
 
 ### 1. Run the Backend
@@ -316,7 +299,7 @@ Building Growcus helped me understand how production-grade full-stack applicatio
 * **Derived Data and Analytics:** Calculating metrics on the fly (risk metrics, attendance average, subject progress rates) instead of storing hardcoded statistics.
 * **Redis Caching:** Accelerating database analytics queries and minimizing MongoDB load by utilizing Redis key-value stores.
 * **AI Integration:** Constructing system prompts and using Groq API streaming or responses to build a conversational assistant.
-* **Docker Containerization:** Preparing applications for clean, reproducible production environments.
+* **Cloud Database (MongoDB Atlas):** Configuring and connecting to a cloud-hosted MongoDB instance for production use.
 
 ---
 
