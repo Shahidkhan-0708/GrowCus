@@ -124,7 +124,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-zinc-900 border border-brand-border focus:border-brand-primary focus:ring-1 focus:ring-brand-primary rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 transition-colors outline-none"
-                placeholder="••••••••"
+                placeholder="••••••"
               />
             </div>
 

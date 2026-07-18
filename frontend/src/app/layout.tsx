@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ReticleDev } from './reticle-dev';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({
       </head>
       <body className="bg-brand-bg text-foreground min-h-screen antialiased">
         <AuthProvider>
+          {process.env.NODE_ENV === 'development' ? <ReticleDev /> : null}
           {children}
         </AuthProvider>
       </body>

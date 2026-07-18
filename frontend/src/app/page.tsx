@@ -460,13 +460,14 @@ export default function DashboardPage() {
                   {/* Title Welcome Bar */}
                   <div className="flex justify-between items-center">
                     <div>
-                      <h2 className="text-xl font-bold tracking-tight text-gray-800">Welcome back, {user.name}</h2>
+                      <h2 data-testid="dashboard-welcome" className="text-xl font-bold tracking-tight text-gray-800">Welcome back, {user.name}</h2>
                       <p className="text-xs text-gray-500">
                         Here is your academic intelligence overview for today.
                       </p>
                     </div>
                     {currentRole === 'teacher' && (
                       <button 
+                        data-testid="assign-task-btn"
                         onClick={() => setShowTaskModal(true)}
                         className="bg-brand-primary hover:bg-brand-primary/95 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-md shadow-brand-primary/20 cursor-pointer"
                       >
@@ -476,6 +477,7 @@ export default function DashboardPage() {
                     )}
                     {currentRole === 'admin' && (
                       <button 
+                        data-testid="enroll-student-btn"
                         onClick={() => setShowStudentModal(true)}
                         className="bg-brand-primary hover:bg-brand-primary/95 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-md shadow-brand-primary/20 cursor-pointer"
                       >
@@ -1356,6 +1358,7 @@ export default function DashboardPage() {
                       {/* Text Input footer */}
                       <div className="flex gap-2">
                         <input
+                          data-testid="aria-chat-input"
                           type="text"
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
@@ -1366,6 +1369,7 @@ export default function DashboardPage() {
                           className="flex-1 bg-gray-50 border border-brand-border focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition-colors outline-none"
                         />
                         <button
+                          data-testid="aria-send-btn"
                           onClick={() => handleSendMessage(chatInput)}
                           className="bg-brand-secondary hover:bg-brand-secondary/95 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer"
                         >

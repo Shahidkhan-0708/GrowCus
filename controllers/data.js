@@ -12,8 +12,10 @@ const {
 } = require("../services/studentData")
 const { asyncHandler, AppError, sendSuccess } = require("../utils/api")
 
-const DEFAULT_STUDENT_PASSWORD = "student123"
-const DEFAULT_TEACHER_PASSWORD = "teacher123"
+const { defaults } = require("../config/security")
+
+const DEFAULT_STUDENT_PASSWORD = defaults.studentPassword
+const DEFAULT_TEACHER_PASSWORD = defaults.teacherPassword
 
 const getMe = asyncHandler(async (req, res) => {
    const user = await User.findById(req.user.userId).select(publicUserFields).lean()

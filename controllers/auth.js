@@ -5,6 +5,7 @@ const AppError=require("../jobs/apiError")
 const DashboardStats=require("../models/DashboardStat")
 const {setUser}=require("../services/auth")
 const {sendSuccess}=require("../jobs/apiResponse")
+const { recordAccountFailure, resetAccountFailures, isAccountLocked } = require("../middlewares/rateLimiter")
 
 const handleSignUp = asyncHandler(async (req, res) => {
 const {name,email,password,role,instituteId}=req.body;
@@ -66,15 +67,24 @@ const {email,password}=req.body;
 if(!email||!password){
     throw new AppError("Missing fields", 400)
 }
+
+const lockedStatus = isAccountLocked(email)
+if (lockedStatus.locked) {
+    throw new AppError(`Account locked. Try again in ${lockedStatus.retryAfter} seconds.`, 429)
+}
+
 const user=await User.findOne({email});
 if(!user){
+    recordAccountFailure(email)
     throw new AppError("Invalid username or email", 401)
-    
 }
 const isMatch=await bcrypt.compare(password,user.password)
 if(!isMatch){
+    recordAccountFailure(email)
     throw new AppError("Invalid credentials", 401)
 }
+
+resetAccountFailures(email)
   // Attendance Automation
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Start of today

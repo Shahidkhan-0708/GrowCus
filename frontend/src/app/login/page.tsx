@@ -9,9 +9,9 @@ import Link from 'next/link';
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState('sarah.jenkins@growcus.com');
-  const [password, setPassword] = useState('password123');
-  const [role, setRole] = useState<'admin' | 'teacher' | 'student'>('admin');
+  const [email, setEmail] = useState('exmaple@gmail.com');
+  const [password, setPassword] = useState('@example@');
+  const [role, setRole] = useState<'admin'|'teacher'|'student'>('admin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,7 +19,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
       const success = await login(email, password, role);
       if (success) {
@@ -74,6 +73,7 @@ export default function LoginPage() {
             <div className="space-y-1">
               <label className="text-xs font-semibold text-zinc-400">Email Address</label>
               <input
+                data-testid="email-input"
                 type="email"
                 required
                 value={email}
@@ -89,6 +89,7 @@ export default function LoginPage() {
                 <a href="#" className="text-xs text-brand-primary hover:underline">Forgot?</a>
               </div>
               <input
+                data-testid="password-input"
                 type="password"
                 required
                 value={password}
@@ -101,6 +102,7 @@ export default function LoginPage() {
             <div className="space-y-1">
               <label className="text-xs font-semibold text-zinc-400">Select Sandbox Role</label>
               <select
+                data-testid="role-select"
                 value={role}
                 onChange={(e) => setRole(e.target.value as any)}
                 className="w-full bg-zinc-900 border border-brand-border focus:border-brand-primary focus:ring-1 focus:ring-brand-primary rounded-lg px-3.5 py-2.5 text-sm text-white transition-colors outline-none cursor-pointer"
@@ -112,6 +114,7 @@ export default function LoginPage() {
             </div>
 
             <button
+              data-testid="login-btn"
               type="submit"
               disabled={loading}
               className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white rounded-lg py-2.5 text-sm font-medium transition-all shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 cursor-pointer mt-6 disabled:opacity-50"

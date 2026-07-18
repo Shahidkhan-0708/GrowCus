@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "reticle": {
+      "command": "npx",
+      "args": ["@reticlehq/server", "mcp"]
+    },
+     "obsidian": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-obsidian"]
+    }
+  }
+
+}
