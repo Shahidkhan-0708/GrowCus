@@ -1,0 +1,29 @@
+GROQ_API_KEY=your_groq_api_key_here
+MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/?appName=YourApp
+PORT=5000
+CLIENT_URL=http://localhost:3000
+JWT_SECRET=your_jwt_secret_here
+
+# Optional — WhatsApp integration
+WHATSAPP_API_URL=https://your-whatsapp-api-endpoint.com/send
+WHATSAPP_API_TOKEN=your_whatsapp_api_token_here
+
+# Optional — Default passwords for seeded accounts
+DEFAULT_STUDENT_PASSWORD=ChangeMe!Student2026
+DEFAULT_TEACHER_PASSWORD=ChangeMe!Teacher2026
+
+# Optional — JWT expiry
+JWT_EXPIRES_IN=24h
+
+# Optional — Rate Limiting overrides
+# RL_AUTH_WINDOW_MS=900000
+# RL_AUTH_MAX=10
+# RL_AUTH_PER_ACCT=5
+# RL_AUTH_BACKOFF_MS=1000
+# RL_AUTH_BACKOFF_MAX=30000
+# RL_API_WINDOW_MS=900000
+# RL_API_MAX=200
+# RL_ARIA_WINDOW_MS=60000
+# RL_ARIA_MAX=10
+# RL_PUB_WINDOW_MS=900000
+# RL_PUB_MAX=60
